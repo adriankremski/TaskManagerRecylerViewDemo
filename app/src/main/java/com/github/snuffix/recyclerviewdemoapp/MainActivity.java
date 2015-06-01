@@ -6,10 +6,16 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.SparseBooleanArray;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+
+import com.squareup.otto.Bus;
+import com.squareup.otto.Subscribe;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -24,7 +30,11 @@ public class MainActivity extends ActionBarActivity {
 
     private RecyclerView recyclerView;
 
-    private List<String> tasks = new LinkedList<String>();
+    private List<Task> tasks = new LinkedList<Task>();
+
+    private TaskAdapter taskAdapter;
+
+    private static final Bus BUS = new Bus();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,23 +46,38 @@ public class MainActivity extends ActionBarActivity {
 
         recyclerView = new RecyclerView(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(new TaskAdapter());
-        recyclerView.addItemDecoration(new TaskRowItemDecoration(getDrawable(R.drawable.task_divider)));
+        recyclerView.setAdapter(taskAdapter = new TaskAdapter());
         recyclerViewHolder.addView(recyclerView);
     }
 
     private void initTasks() {
-        tasks.add("Wake up");
-        tasks.add("Go to work");
-        tasks.add("Make a coffee");
-        tasks.add("Go to standup");
-        tasks.add("Make a coffee");
-        tasks.add("Spend some time in chillout room");
-        tasks.add("Go home");
-        tasks.add("Sleep");
+        tasks.add(new Task("Wake up"));
+        tasks.add(new Task("Go to work"));
+        tasks.add(new Task("Make a coffee"));
+        tasks.add(new Task("Go to standup"));
+        tasks.add(new Task("Make a coffee"));
+        tasks.add(new Task("Spend some time in chillout room"));
+        tasks.add(new Task("Make a coffee"));
+        tasks.add(new Task("Go home"));
+        tasks.add(new Task("Make a coffee"));
+        tasks.add(new Task("Sleep"));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        BUS.register(taskAdapter);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        BUS.unregister(taskAdapter);
     }
 
     private class TaskAdapter extends RecyclerView.Adapter<TaskRowHolder> {
+
+        private SparseBooleanArray itemsState = new SparseBooleanArray();
 
         @Override
         public TaskRowHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -61,29 +86,49 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         public void onBindViewHolder(TaskRowHolder holder, int position) {
-            holder.setTask(tasks.get(position));
+            holder.setTask(tasks.get(position), position);
+            holder.setChecked(itemsState.get(position));
         }
 
         @Override
         public int getItemCount() {
             return tasks.size();
         }
+
+        @Subscribe
+        public void onTaskCheckStateChangedEvent(TaskCheckStateChangedEvent event){
+            itemsState.put(event.taskNumber, event.isChecked);
+        }
     }
 
     class TaskRowHolder extends RecyclerView.ViewHolder {
 
         private TextView taskNameLabel;
+        private CheckBox checkBox;
 
-        private String task;
+        private Task task;
+        private int taskNumber;
 
         public TaskRowHolder(View itemView) {
             super(itemView);
             taskNameLabel = ButterKnife.findById(itemView, R.id.task_name);
+            checkBox = ButterKnife.findById(itemView, R.id.checkbox);
+            checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    BusProvider.getInstance().post(new TaskCheckStateChangedEvent(isChecked, taskNumber));
+                }
+            });
         }
 
-        public void setTask(String task) {
+        public void setTask(Task task, int taskNumber) {
             this.task = task;
-            taskNameLabel.setText(task);
+            this.taskNumber = taskNumber;
+            taskNameLabel.setText(task.name);
+        }
+
+        public void setChecked(boolean checked) {
+            checkBox.setChecked(checked);
         }
     }
 
@@ -108,6 +153,14 @@ public class MainActivity extends ActionBarActivity {
                 dividerDrawable.setBounds(parent.getPaddingLeft(), top, parent.getWidth() - parent.getPaddingRight(), bottom);
                 dividerDrawable.draw(canvas);
             }
+        }
+    }
+
+    private class Task {
+        String name;
+
+        public Task(String name) {
+            this.name = name;
         }
     }
 }
