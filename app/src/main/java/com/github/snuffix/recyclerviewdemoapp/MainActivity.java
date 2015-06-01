@@ -1,12 +1,16 @@
 package com.github.snuffix.recyclerviewdemoapp;
 
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.SparseBooleanArray;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -17,8 +21,12 @@ import android.widget.TextView;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -27,6 +35,9 @@ public class MainActivity extends ActionBarActivity {
 
     @InjectView(R.id.recycler_view_holder)
     public FrameLayout recyclerViewHolder;
+
+    @InjectView(R.id.toolbar)
+    public Toolbar toolbar;
 
     private RecyclerView recyclerView;
 
@@ -41,6 +52,9 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
+
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         initTasks();
 
@@ -64,9 +78,27 @@ public class MainActivity extends ActionBarActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         BUS.register(taskAdapter);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_delete:
+                taskAdapter.deleteCheckedItems();
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        return true;
     }
 
     @Override
@@ -77,7 +109,7 @@ public class MainActivity extends ActionBarActivity {
 
     private class TaskAdapter extends RecyclerView.Adapter<TaskRowHolder> {
 
-        private SparseBooleanArray itemsState = new SparseBooleanArray();
+        private Set<Task> selectedTasks = new HashSet<Task>();
 
         @Override
         public TaskRowHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -86,8 +118,9 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         public void onBindViewHolder(TaskRowHolder holder, int position) {
-            holder.setTask(tasks.get(position), position);
-            holder.setChecked(itemsState.get(position));
+            Task task = tasks.get(position);
+            holder.setTask(tasks.get(position));
+            holder.setChecked(selectedTasks.contains(task));
         }
 
         @Override
@@ -97,7 +130,20 @@ public class MainActivity extends ActionBarActivity {
 
         @Subscribe
         public void onTaskCheckStateChangedEvent(TaskCheckStateChangedEvent event){
-            itemsState.put(event.taskNumber, event.isChecked);
+            if (event.isChecked) {
+                selectedTasks.add(event.task);
+            } else {
+                selectedTasks.remove(event.task);
+            }
+        }
+
+        public void deleteCheckedItems() {
+            List<Task> tasksForRemoval = new LinkedList<Task>();
+
+            for (Task task : selectedTasks) {
+                taskAdapter.notifyItemRemoved(tasks.indexOf(task));
+                tasks.remove(task);
+            }
         }
     }
 
@@ -107,7 +153,6 @@ public class MainActivity extends ActionBarActivity {
         private CheckBox checkBox;
 
         private Task task;
-        private int taskNumber;
 
         public TaskRowHolder(View itemView) {
             super(itemView);
@@ -116,14 +161,13 @@ public class MainActivity extends ActionBarActivity {
             checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    BusProvider.getInstance().post(new TaskCheckStateChangedEvent(isChecked, taskNumber));
+                    BUS.post(new TaskCheckStateChangedEvent(task, isChecked));
                 }
             });
         }
 
-        public void setTask(Task task, int taskNumber) {
+        public void setTask(Task task) {
             this.task = task;
-            this.taskNumber = taskNumber;
             taskNameLabel.setText(task.name);
         }
 
@@ -156,11 +200,21 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    private class Task {
+    class Task {
         String name;
 
         public Task(String name) {
             this.name = name;
+        }
+    }
+
+    public class TaskCheckStateChangedEvent {
+        public boolean isChecked;
+        public Task task;
+
+        public TaskCheckStateChangedEvent(Task task, boolean isChecked) {
+            this.task = task;
+            this.isChecked = isChecked;
         }
     }
 }
