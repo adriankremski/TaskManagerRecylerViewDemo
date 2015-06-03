@@ -30,6 +30,7 @@ import java.util.Set;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import jp.wasabeef.recyclerview.animators.SlideInLeftAnimator;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -61,6 +62,7 @@ public class MainActivity extends ActionBarActivity {
         recyclerView = new RecyclerView(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(taskAdapter = new TaskAdapter());
+        recyclerView.setItemAnimator(new SlideInLeftAnimator());
         recyclerViewHolder.addView(recyclerView);
     }
 
