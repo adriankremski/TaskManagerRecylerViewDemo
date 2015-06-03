@@ -30,10 +30,28 @@
 
     </android.support.v7.widget.Toolbar>
 
-    <FrameLayout
-        android:id="@+id/recycler_view_holder"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
-    </FrameLayout>
+        <FrameLayout
+            android:id="@+id/recycler_view_holder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </FrameLayout>
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/add_task"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fab_colorNormal="#ff4081"
+            app:fab_colorPressed="#FF6E9F"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginBottom="16dp"/>
+
+    </RelativeLayout>
+
+
 </LinearLayout>

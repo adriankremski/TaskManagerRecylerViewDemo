@@ -1,5 +1,7 @@
 package com.github.snuffix.recyclerviewdemoapp;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
@@ -15,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -30,6 +33,7 @@ import java.util.Set;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import butterknife.OnClick;
 import jp.wasabeef.recyclerview.animators.SlideInLeftAnimator;
 
 public class MainActivity extends ActionBarActivity {
@@ -89,6 +93,23 @@ public class MainActivity extends ActionBarActivity {
     protected void onResume() {
         super.onResume();
         BUS.register(taskAdapter);
+    }
+
+    @OnClick(R.id.add_task)
+    public void addTask() {
+        final EditText input = new EditText(this);
+
+        new AlertDialog.Builder(this).setTitle("New task").setMessage("Please supply task name")
+                .setView(input).setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                tasks.add(new Task(input.getText().toString()));
+                taskAdapter.notifyItemInserted(tasks.size()-1);
+            }
+        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Canceled.
+            }
+        }).show();
     }
 
     @Override
