@@ -140,12 +140,11 @@ public class MainActivity extends ActionBarActivity {
         }
 
         public void deleteCheckedItems() {
-            List<Task> tasksForRemoval = new LinkedList<Task>();
-
             for (Task task : selectedTasks) {
                 taskAdapter.notifyItemRemoved(tasks.indexOf(task));
                 tasks.remove(task);
             }
+            selectedTasks.clear();
         }
     }
 
