@@ -52,6 +52,8 @@ public class MainActivity extends ActionBarActivity {
 
     private static final Bus BUS = new Bus();
 
+    private SwipeToDismissTouchListener swipeToDismissTouchListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +70,21 @@ public class MainActivity extends ActionBarActivity {
         recyclerView.setAdapter(taskAdapter = new TaskAdapter());
         recyclerView.setItemAnimator(new SlideInLeftAnimator());
         recyclerViewHolder.addView(recyclerView);
+
+        swipeToDismissTouchListener = new SwipeToDismissTouchListener(recyclerView, new SwipeToDismissTouchListener.DismissCallbacks() {
+            @Override
+            public SwipeToDismissTouchListener.SwipeDirection canDismiss(int position) {
+                return SwipeToDismissTouchListener.SwipeDirection.RIGHT;
+            }
+            @Override
+            public void onDismiss(RecyclerView view, List<SwipeToDismissTouchListener.PendingDismissData> dismissData) {
+                for (SwipeToDismissTouchListener.PendingDismissData data : dismissData) {
+                    tasks.remove(data.position);
+                    taskAdapter.notifyItemRemoved(data.position);
+                }
+            }
+        });
+        recyclerView.addOnItemTouchListener(swipeToDismissTouchListener);
     }
 
     private void initTasks() {
