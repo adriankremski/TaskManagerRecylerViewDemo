@@ -47,6 +47,7 @@
             android:layout_height="wrap_content"
             app:fab_colorNormal="#ff4081"
             app:fab_colorPressed="#FF6E9F"
+            app:fab_icon="@drawable/ic_fab_star"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
             android:layout_marginBottom="16dp"/>

@@ -63,13 +63,9 @@ public class MainActivity extends ActionBarActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        initTasks();
-
         recyclerView = new RecyclerView(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(taskAdapter = new TaskAdapter());
-        recyclerView.setItemAnimator(new SlideInLeftAnimator());
-        recyclerViewHolder.addView(recyclerView);
 
         swipeToDismissTouchListener = new SwipeToDismissTouchListener(recyclerView, new SwipeToDismissTouchListener.DismissCallbacks() {
             @Override
@@ -85,19 +81,8 @@ public class MainActivity extends ActionBarActivity {
             }
         });
         recyclerView.addOnItemTouchListener(swipeToDismissTouchListener);
-    }
-
-    private void initTasks() {
-        tasks.add(new Task("Wake up"));
-        tasks.add(new Task("Go to work"));
-        tasks.add(new Task("Make a coffee"));
-        tasks.add(new Task("Go to standup"));
-        tasks.add(new Task("Make a coffee"));
-        tasks.add(new Task("Spend some time in chillout room"));
-        tasks.add(new Task("Make a coffee"));
-        tasks.add(new Task("Go home"));
-        tasks.add(new Task("Make a coffee"));
-        tasks.add(new Task("Sleep"));
+        recyclerView.setItemAnimator(new SlideInLeftAnimator());
+        recyclerViewHolder.addView(recyclerView);
     }
 
     @Override
